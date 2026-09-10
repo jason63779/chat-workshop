@@ -9,6 +9,7 @@ const path = require('path');
 const crypto = require('crypto');
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 8765;
+const RECHARGE_PWD = process.env.RECHARGE_PWD || '123321';
 const DATA_FILE = process.env.DATA_FILE || path.join(__dirname, 'data.json');
 const HTML_FILE = path.join(__dirname, 'index.html');
 
@@ -442,7 +443,7 @@ function handleApi(pathname, query, req) {
   if (pathname === '/api/chips/recharge' && req) {
     const me = getMe(req.token);
     if (!me) return err('未登录', 401);
-    if (String(req.pwd || '') !== '123321') return err('充值密码错误');
+    if (String(req.pwd || '') !== RECHARGE_PWD) return err('充值密码错误');
     let amount = parseInt(req.amount, 10);
     if (!(amount >= 1)) amount = 1000;
     state.users[me].chips = parseInt(state.users[me].chips, 10) + amount;
