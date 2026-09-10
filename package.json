@@ -1,0 +1,13 @@
+{
+  "name": "chat-workshop",
+  "version": "1.0.0",
+  "description": "双人在线聊天 + 牛牛/梭哈/炸金花对战",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}

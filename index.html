@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>聊天工坊 · 双人聊天与小游戏</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --primary:#6366f1;--primary-dark:#4f46e5;--primary-light:#eef2ff;
+  --bg:#f1f5f9;--card:#fff;--text:#1e293b;--text-2:#64748b;--text-3:#94a3b8;
+  --border:#e2e8f0;--danger:#ef4444;--success:#10b981;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(30,41,59,.08);
+}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);font-size:15px;overflow:hidden}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+input,textarea{font-family:inherit;outline:none}
+img{max-width:100%}
+.hidden{display:none!important}
+
+/* ============ 登录页 ============ */
+#auth-screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;
+  background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)}
+.auth-card{background:var(--card);border-radius:20px;padding:32px 28px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.auth-logo{text-align:center;font-size:44px;margin-bottom:6px}
+.auth-title{text-align:center;font-size:22px;font-weight:700;margin-bottom:4px}
+.auth-sub{text-align:center;color:var(--text-2);font-size:13px;margin-bottom:22px}
+.auth-tabs{display:flex;background:var(--bg);border-radius:10px;padding:4px;margin-bottom:20px}
+.auth-tab{flex:1;padding:10px;border-radius:8px;font-size:15px;font-weight:600;color:var(--text-2);transition:.2s}
+.auth-tab.active{background:var(--card);color:var(--primary);box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:13px;color:var(--text-2);margin-bottom:6px;font-weight:600}
+.field input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;transition:.2s;background:var(--card)}
+.field input:focus{border-color:var(--primary)}
+.btn-primary{width:100%;padding:13px;background:var(--primary);color:#fff;border-radius:10px;font-size:16px;font-weight:600;transition:.2s;margin-top:6px}
+.btn-primary:active{background:var(--primary-dark);transform:scale(.98)}
+.btn-primary:disabled{opacity:.5}
+.auth-error{color:var(--danger);font-size:13px;text-align:center;min-height:18px;margin-top:10px}
+.auth-hint{margin-top:18px;padding:12px;background:var(--primary-light);border-radius:10px;font-size:12.5px;color:var(--primary-dark);line-height:1.6}
+
+/* ============ 主布局 ============ */
+#app-screen{display:flex;height:100dvh;height:100vh}
+.sidebar{width:300px;min-width:300px;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:transform .25s ease;z-index:30}
+.chat-area{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--bg)}
+
+/* 侧边栏 */
+.profile{padding:18px 16px 14px;border-bottom:1px solid var(--border)}
+.profile-top{display:flex;align-items:center;gap:12px}
+.avatar{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:19px;flex-shrink:0}
+.profile-info{flex:1;min-width:0}
+.profile-name{font-weight:700;font-size:16px;display:flex;align-items:center;gap:6px}
+.profile-user{font-size:12.5px;color:var(--text-3)}
+.logout-btn{color:var(--text-3);font-size:20px;padding:6px;border-radius:8px}
+.logout-btn:active{background:var(--bg)}
+.profile-actions{display:flex;gap:8px;margin-top:12px}
+.pa-btn{flex:1;padding:9px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;color:var(--primary);background:var(--card);transition:.15s}
+.pa-btn:active{background:var(--primary-light)}
+.chips-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)}
+.chips-info{display:flex;align-items:center;gap:7px;font-weight:700;font-size:15px}
+.chips-num{color:var(--primary);font-size:17px}
+.recharge-btn{width:38px;height:38px;border-radius:50%;background:var(--warn);color:#fff;font-size:24px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(245,158,11,.4)}
+.recharge-btn:active{transform:scale(.92)}
+.notify-bar{margin:10px 16px 6px;padding:11px 14px;background:var(--primary-light);border-radius:12px;display:flex;align-items:center;justify-content:space-between}
+.notify-label{font-size:14px;font-weight:600;color:var(--primary-dark)}
+.switch{position:relative;width:46px;height:26px;border-radius:13px;background:#cbd5e1;transition:.2s;flex-shrink:0}
+.switch.on{background:var(--primary)}
+.switch::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.switch.on::after{left:23px}
+.contacts-head{padding:14px 16px 8px;font-size:13px;font-weight:700;color:var(--text-3);letter-spacing:1px}
+.contact-list{flex:1;overflow-y:auto;padding:0 8px 12px}
+.contact-item{display:flex;align-items:center;gap:11px;padding:11px 10px;border-radius:12px;cursor:pointer;transition:.15s;position:relative}
+.contact-item:active{background:var(--primary-light)}
+.contact-item.active{background:var(--primary-light)}
+.contact-avatar{position:relative;flex-shrink:0}
+.online-dot{position:absolute;right:-1px;bottom:-1px;width:13px;height:13px;border-radius:50%;background:#cbd5e1;border:2.5px solid var(--card)}
+.online-dot.on{background:var(--success)}
+.contact-info{flex:1;min-width:0}
+.contact-name{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.contact-user{font-size:12px;color:var(--text-3)}
+.unread-badge{min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:var(--danger);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.no-contacts{text-align:center;color:var(--text-3);padding:40px 24px;font-size:13.5px;line-height:1.9}
+
+/* 聊天区 */
+.chat-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text-3);padding:30px;text-align:center}
+.chat-empty .icon{font-size:64px;margin-bottom:18px;opacity:.6}
+.chat-empty h2{font-size:21px;color:var(--text);margin-bottom:10px}
+.chat-empty p{font-size:14px;line-height:1.8}
+.chat-header{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--card);border-bottom:1px solid var(--border);min-height:62px}
+.menu-btn{display:none;font-size:22px;padding:6px 8px;color:var(--text)}
+.header-info{flex:1;min-width:0}
+.header-name{font-weight:700;font-size:16px;display:flex;align-items:center;gap:7px}
+.header-status{font-size:12px;color:var(--text-3)}
+.header-status.online{color:var(--success)}
+.header-btn{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;color:var(--primary);background:var(--primary-light);transition:.15s;position:relative}
+.header-btn:active{transform:scale(.92)}
+.header-btn.danger{color:var(--danger);background:#fef2f2}
+.messages{flex:1;overflow-y:auto;padding:18px 14px;display:flex;flex-direction:column;gap:12px}
+.msg-row{display:flex;gap:9px;max-width:82%;animation:msgIn .2s ease}
+@keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.msg-row.me{align-self:flex-end;flex-direction:row-reverse}
+.msg-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:15px;flex-shrink:0}
+.msg-body{min-width:0}
+.msg-sender{font-size:12px;color:var(--text-3);margin-bottom:3px;padding:0 4px}
+.msg-row.me .msg-sender{text-align:right}
+.bubble{padding:10px 13px;border-radius:16px;background:var(--card);box-shadow:0 1px 4px rgba(0,0,0,.06);word-break:break-word;line-height:1.55;position:relative;cursor:pointer;font-size:15px;white-space:pre-wrap}
+.msg-row.me .bubble{background:var(--primary);color:#fff;border-bottom-right-radius:5px}
+.msg-row.other .bubble{border-bottom-left-radius:5px}
+.bubble img{border-radius:10px;display:block;max-width:230px;cursor:pointer}
+.msg-time{font-size:11px;color:var(--text-3);margin-top:4px;padding:0 4px}
+.msg-row.me .msg-time{text-align:right}
+.msg-system{align-self:center;background:rgba(100,116,139,.12);color:var(--text-2);font-size:12.5px;padding:5px 14px;border-radius:20px;text-align:center;max-width:90%}
+.msg-recalled{align-self:center;color:var(--text-3);font-size:13px;font-style:italic;padding:4px 12px}
+/* 游戏邀请卡片 */
+.game-card{background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:14px;padding:14px;width:240px;box-shadow:0 2px 10px rgba(245,158,11,.25)}
+.game-card-title{font-weight:700;font-size:15px;color:#92400e;display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.game-card-desc{font-size:13px;color:#a16207;margin-bottom:10px;line-height:1.5}
+.game-card-btns{display:flex;gap:8px}
+.gc-btn{flex:1;padding:9px;border-radius:9px;font-size:13.5px;font-weight:600}
+.gc-btn.primary{background:var(--warn);color:#fff}
+.gc-btn.ghost{background:rgba(255,255,255,.7);color:#92400e}
+/* 消息操作菜单 */
+.msg-menu{position:absolute;top:-38px;z-index:20;display:flex;gap:4px;background:var(--card);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.15);padding:5px;white-space:nowrap}
+.msg-row.me .msg-menu{right:0}
+.msg-row.other .msg-menu{left:0}
+.msg-menu button{padding:6px 12px;border-radius:7px;font-size:13px;font-weight:600;color:var(--primary)}
+.msg-menu button.danger{color:var(--danger)}
+.msg-menu button:active{background:var(--bg)}
+/* 输入区 */
+.input-bar{display:flex;align-items:flex-end;gap:9px;padding:10px 12px;background:var(--card);border-top:1px solid var(--border);padding-bottom:max(10px,env(safe-area-inset-bottom))}
+.img-btn{width:44px;height:44px;border-radius:50%;background:var(--primary-light);color:var(--primary);font-size:21px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s}
+.img-btn:active{transform:scale(.92)}
+#msg-input{flex:1;border:1.5px solid var(--border);border-radius:22px;padding:11px 16px;font-size:16px;resize:none;max-height:110px;min-height:44px;line-height:1.4;background:var(--bg)}
+#msg-input:focus{border-color:var(--primary);background:var(--card)}
+.send-btn{height:44px;padding:0 20px;border-radius:22px;background:var(--primary);color:#fff;font-weight:600;font-size:15px;flex-shrink:0;transition:.15s}
+.send-btn:active{transform:scale(.95);background:var(--primary-dark)}
+.send-btn:disabled{opacity:.45}
+
+/* 遮罩 / 弹窗 */
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{background:var(--card);border-radius:18px;padding:24px 22px;width:100%;max-width:360px;max-height:88dvh;overflow-y:auto;animation:popIn .22s ease}
+@keyframes popIn{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
+.modal h3{font-size:18px;margin-bottom:16px;text-align:center}
+.modal .field input{font-size:16px}
+.modal-btns{display:flex;gap:10px;margin-top:16px}
+.m-btn{flex:1;padding:12px;border-radius:10px;font-size:15px;font-weight:600}
+.m-btn.primary{background:var(--primary);color:#fff}
+.m-btn.ghost{background:var(--bg);color:var(--text-2)}
+.m-btn.danger{background:var(--danger);color:#fff}
+.recharge-opts{display:flex;gap:10px;margin-bottom:14px}
+.rc-opt{flex:1;padding:14px 4px;border:2px solid var(--border);border-radius:12px;text-align:center;font-weight:700;font-size:15px;transition:.15s}
+.rc-opt small{display:block;font-size:11px;color:var(--text-3);font-weight:400;margin-top:2px}
+.rc-opt.sel{border-color:var(--warn);background:#fffbeb;color:#b45309}
+
+/* ===== 游戏面板 ===== */
+#game-modal .modal{max-width:430px;padding:0;overflow:hidden}
+.game-panel{background:linear-gradient(160deg,#1e3a5f,#0f1f3a);color:#fff;border-radius:18px;overflow:hidden}
+.gp-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.12)}
+.gp-title{font-weight:700;font-size:16px;display:flex;align-items:center;gap:7px}
+.gp-close{font-size:22px;color:rgba(255,255,255,.7);padding:2px 8px}
+.gp-table{padding:16px;position:relative;min-height:300px}
+.gp-player{display:flex;flex-direction:column;align-items:center;gap:7px;margin-bottom:14px}
+.gp-player.me{margin-bottom:0;margin-top:14px}
+.gp-pname{font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:7px}
+.gp-tag{font-size:11px;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,.15)}
+.gp-tag.turn{background:#f59e0b;color:#1e293b;font-weight:700;animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.55}}
+.gp-tag.fold{background:#ef4444}
+.gp-cards{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.pcard{width:46px;height:64px;border-radius:8px;background:#fff;color:#1e293b;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.3);position:relative}
+.pcard .rank{font-size:17px;line-height:1}
+.pcard .suit{font-size:16px;line-height:1.1}
+.pcard.red{color:#dc2626}
+.pcard.back{background:repeating-linear-gradient(45deg,#4f46e5,#4f46e5 6px,#6366f1 6px,#6366f1 12px);border:2px solid rgba(255,255,255,.4)}
+.pcard.back::after{content:'🂠';font-size:24px}
+.pcard.back .rank,.pcard.back .suit{display:none}
+.pcard.win{box-shadow:0 0 0 3px #fbbf24,0 2px 12px rgba(251,191,36,.6)}
+/* 发牌动画 + 选牌 */
+.gp-card-slot{width:46px;height:64px;perspective:600px;position:relative;cursor:pointer;transition:transform .2s}
+.gp-card-slot.dealing{animation:dealIn .35s ease}
+@keyframes dealIn{from{transform:translateY(-30px) rotateY(180deg);opacity:0}to{transform:none;opacity:1}}
+.gp-card-slot.dealt{animation:flipIn .4s ease}
+@keyframes flipIn{from{transform:rotateY(180deg);opacity:.5}to{transform:none;opacity:1}}
+.gp-card-slot.selectable:hover{transform:translateY(-6px)}
+.gp-card-slot.selected{transform:translateY(-10px)}
+.gp-card-slot.selected .pcard{box-shadow:0 0 0 3px #fbbf24,0 4px 16px rgba(251,191,36,.5)}
+.gp-card-slot.niu-card .pcard{box-shadow:0 0 0 2px #10b981,0 2px 10px rgba(16,185,129,.4)}
+.gp-card-slot.locked{opacity:.6;pointer-events:none}
+.gp-sel-hint{font-size:12px;color:rgba(255,255,255,.6);margin-top:4px;text-align:center}
+.gp-card-slot.sh-slot{cursor:default}
+.gp-card-slot.hole .pcard{box-shadow:0 0 0 2px #fbbf24,0 2px 10px rgba(251,191,36,.45)}
+.gp-card-slot.empty-slot{border:1px dashed rgba(255,255,255,.22);border-radius:8px;background:rgba(255,255,255,.04);cursor:default}
+.gp-tag.hole-tag{background:rgba(251,191,36,.25);color:#fde68a;margin-left:4px}
+.gp-center{text-align:center;padding:10px 0;margin:6px 0;border-top:1px dashed rgba(255,255,255,.18);border-bottom:1px dashed rgba(255,255,255,.18)}
+.gp-pot{font-size:15px;font-weight:700;color:#fbbf24}
+.gp-pot small{display:block;font-size:11.5px;color:rgba(255,255,255,.65);font-weight:400;margin-top:3px;line-height:1.5}
+.gp-status{margin-top:6px;font-size:13px;color:rgba(255,255,255,.85)}
+.gp-actions{padding:12px 16px 18px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.gp-btn{padding:11px 16px;border-radius:11px;font-size:14px;font-weight:700;background:rgba(255,255,255,.14);color:#fff;transition:.15s;min-width:84px}
+.gp-btn:active{transform:scale(.94)}
+.gp-btn.primary{background:#f59e0b;color:#1e293b}
+.gp-btn.danger{background:#ef4444}
+.gp-btn:disabled{opacity:.35}
+.gp-result{background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.4);border-radius:12px;padding:12px;margin:8px 0;text-align:center;font-weight:700;font-size:14.5px;line-height:1.6;color:#fde68a}
+.gp-waiting{text-align:center;padding:30px 10px}
+.gp-waiting .big{font-size:46px;margin-bottom:12px}
+.gp-waiting p{font-size:14.5px;line-height:1.8;color:rgba(255,255,255,.9)}
+.gp-bet{color:#fbbf24;font-weight:700}
+
+/* 浮动游戏按钮 */
+#game-fab{position:fixed;right:16px;bottom:84px;width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;font-size:26px;display:flex;align-items:center;justify-content:center;z-index:40;box-shadow:0 6px 20px rgba(239,68,68,.45);animation:fabBounce .6s ease}
+@keyframes fabBounce{from{transform:scale(0)}to{transform:scale(1)}}
+#game-fab:active{transform:scale(.9)}
+
+/* 离线横幅 */
+#offline-banner{position:fixed;top:0;left:0;right:0;background:var(--danger);color:#fff;text-align:center;padding:8px;font-size:13px;z-index:100;font-weight:600}
+
+/* Toast */
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:rgba(15,23,42,.92);color:#fff;padding:11px 22px;border-radius:24px;font-size:14px;z-index:200;pointer-events:none;opacity:0;transition:.25s;max-width:86%;text-align:center}
+#toast.show{opacity:1}
+
+/* 图片预览 */
+#img-preview{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:150;display:flex;align-items:center;justify-content:center;padding:20px;cursor:zoom-out}
+#img-preview img{max-width:100%;max-height:100%;border-radius:8px}
+
+/* 手机端 */
+#sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:25}
+@media(max-width:768px){
+  .sidebar{position:fixed;left:0;top:0;bottom:0;transform:translateX(-100%);width:82%;max-width:320px;box-shadow:4px 0 24px rgba(0,0,0,.15)}
+  .sidebar.open{transform:translateX(0)}
+  #sidebar-overlay.show{display:block}
+  .menu-btn{display:block}
+  .msg-row{max-width:88%}
+  .bubble img{max-width:180px}
+  .pcard{width:42px;height:58px}
+  .gp-btn{padding:10px 12px;min-width:74px;font-size:13.5px}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ 登录页 ============ -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">💬</div>
+    <div class="auth-title">聊天工坊</div>
+    <div class="auth-sub">双人在线聊天 · 牛牛/炸金花对战</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-tab="login">登录</button>
+      <button class="auth-tab" data-tab="register">注册</button>
+    </div>
+    <div class="field">
+      <label>用户名</label>
+      <input id="auth-username" type="text" placeholder="3-20 位字符" autocomplete="username" maxlength="20">
+    </div>
+    <div class="field" id="nick-field" style="display:none">
+      <label>昵称（可选）</label>
+      <input id="auth-nickname" type="text" placeholder="好友看到的名字" maxlength="20">
+    </div>
+    <div class="field">
+      <label>密码</label>
+      <input id="auth-password" type="password" placeholder="至少 6 位" autocomplete="current-password" maxlength="32">
+    </div>
+    <button class="btn-primary" id="auth-submit">登 录</button>
+    <div class="auth-error" id="auth-error"></div>
+    <div class="auth-hint">💡 需先在电脑上运行 <b>server.ps1</b> 启动服务器；<br>两台手机连同一 WiFi，访问 <b>http://电脑IP:8765</b> 即可一起聊天对战。</div>
+  </div>
+</div>
+
+<!-- ============ 主界面 ============ -->
+<div id="app-screen" class="hidden">
+  <div id="sidebar-overlay"></div>
+  <!-- 侧边栏 -->
+  <aside class="sidebar" id="sidebar">
+    <div class="profile">
+      <div class="profile-top">
+        <div class="avatar" id="my-avatar" style="background:#6366f1">?</div>
+        <div class="profile-info">
+          <div class="profile-name" id="my-nickname">--</div>
+          <div class="profile-user" id="my-username">@--</div>
+        </div>
+        <button class="logout-btn" id="logout-btn" title="退出登录">⏻</button>
+      </div>
+      <div class="profile-actions">
+        <button class="pa-btn" id="edit-nick-btn">✏️ 修改昵称</button>
+        <button class="pa-btn" id="sidebar-game-btn">🎮 小游戏</button>
+      </div>
+    </div>
+    <div class="chips-bar">
+      <div class="chips-info">🎰 筹码：<span class="chips-num" id="my-chips">0</span></div>
+      <button class="recharge-btn" id="recharge-btn" title="充值筹码">＋</button>
+    </div>
+    <div class="notify-bar">
+      <span class="notify-label">🔔 消息提醒</span>
+      <div class="switch on" id="notify-switch"></div>
+    </div>
+    <div class="contacts-head">联系人</div>
+    <div class="contact-list" id="contact-list"></div>
+  </aside>
+
+  <!-- 聊天区 -->
+  <main class="chat-area">
+    <div class="chat-empty" id="chat-empty">
+      <div class="icon">💬</div>
+      <h2>选择一位联系人开始聊天</h2>
+      <p>支持发送文字和图片，消息可复制、撤回<br>还能和好友一起玩牛牛、炸金花 🎮</p>
+    </div>
+    <div id="chat-main" class="hidden" style="display:flex;flex-direction:column;flex:1;min-height:0">
+      <div class="chat-header">
+        <button class="menu-btn" id="mobile-menu-btn">☰</button>
+        <div class="header-info">
+          <div class="header-name" id="peer-nickname">--</div>
+          <div class="header-status" id="peer-status">离线</div>
+        </div>
+        <button class="header-btn" id="invite-game-btn" title="邀请玩游戏">🎮</button>
+        <button class="header-btn danger" id="clear-chat-btn" title="清空聊天记录">🗑</button>
+      </div>
+      <div class="messages" id="messages"></div>
+      <div class="input-bar">
+        <button class="img-btn" id="img-btn" title="发送图片">🖼</button>
+        <input type="file" id="img-file" accept="image/*" class="hidden">
+        <textarea id="msg-input" rows="1" placeholder="发消息…"></textarea>
+        <button class="send-btn" id="send-btn">发送</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="offline-banner" class="hidden">⚠️ 无法连接服务器，请检查网络后稍后重试</div>
+<button id="game-fab" class="hidden" title="进行中的游戏">🎮</button>
+<div id="toast"></div>
+
+<!-- ============ 昵称弹窗 ============ -->
+<div class="overlay hidden" id="nick-modal">
+  <div class="modal">
+    <h3>✏️ 修改昵称</h3>
+    <div class="field"><input id="nick-input" type="text" placeholder="输入新昵称（1-20 字）" maxlength="20"></div>
+    <div class="modal-btns">
+      <button class="m-btn ghost" data-close="nick-modal">取消</button>
+      <button class="m-btn primary" id="nick-save">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 充值弹窗 ============ -->
+<div class="overlay hidden" id="recharge-modal">
+  <div class="modal">
+    <h3>🎰 筹码充值</h3>
+    <div class="recharge-opts">
+      <button class="rc-opt sel" data-amt="1000">1000<small>体验包</small></button>
+      <button class="rc-opt" data-amt="5000">5000<small>畅玩包</small></button>
+      <button class="rc-opt" data-amt="10000">10000<small>豪赌包</small></button>
+    </div>
+    <div class="field">
+      <label>充值密码</label>
+      <input id="recharge-pwd" type="password" placeholder="请输入充值密码" maxlength="20">
+    </div>
+    <div class="modal-btns">
+      <button class="m-btn ghost" data-close="recharge-modal">取消</button>
+      <button class="m-btn primary" id="recharge-submit" style="background:#f59e0b">立即充值</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 发起游戏弹窗 ============ -->
+<div class="overlay hidden" id="game-create-modal">
+  <div class="modal">
+    <h3>🎮 邀请好友对战</h3>
+    <div class="recharge-opts" style="flex-direction:column;gap:8px">
+      <button class="rc-opt game-type-sel" data-gtype="niuniu" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:16px">🐂 牛牛<small style="margin:0">5张牌拼牛，比大小</small></button>
+      <button class="rc-opt" data-gtype="showhand" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:16px">🎴 梭哈（港式五张）<small style="margin:0">1张底牌+4张明牌，加注发牌</small></button>
+      <button class="rc-opt" data-gtype="zhajinhua" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:16px">🃏 炸金花<small style="margin:0">3张牌，跟注/加注/比牌</small></button>
+    </div>
+    <div class="field">
+      <label>每局底注（双方各出）</label>
+      <input id="game-bet-input" type="number" value="50" min="10" step="10">
+    </div>
+    <div class="modal-btns">
+      <button class="m-btn ghost" data-close="game-create-modal">取消</button>
+      <button class="m-btn primary" id="game-create-submit">发送邀请</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 游戏面板弹窗 ============ -->
+<div class="overlay hidden" id="game-modal">
+  <div class="modal">
+    <div class="game-panel" id="game-panel"></div>
+  </div>
+</div>
+
+<!-- 图片预览 -->
+<div id="img-preview" class="hidden"><img id="img-preview-img" alt=""></div>
+
+<script>
+'use strict';
+/* ================= 工具 ================= */
+function $(id){return document.getElementById(id)}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function fmtTime(ts){var d=new Date(ts);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
+function avatarColor(name){var h=0;for(var i=0;i<name.length;i++){h=name.charCodeAt(i)+((h<<5)-h)}var colors=['#6366f1','#ec4899','#f59e0b','#10b981','#8b5cf6','#ef4444','#0ea5e9','#f97316'];return colors[Math.abs(h)%colors.length]}
+function nickChar(nick){return (nick||'?').trim().charAt(0).toUpperCase()}
+var toastTimer=null;
+function toast(msg){var t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.classList.remove('show')},2200)}
+
+/* ================= 本地存储 ================= */
+var LS={
+  get:function(k,d){try{var v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},
+  set:function(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
+  del:function(k){try{localStorage.removeItem(k)}catch(e){}}
+};
+
+/* ================= API ================= */
+var Api={
+  post:function(path,data){
+    data=data||{};
+    if(State.token)data.token=State.token;
+    return fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})
+      .then(function(r){return r.json().then(function(j){if(!r.ok||j.ok===false)throw new Error(j.error||('请求失败('+r.status+')'));return j})})
+      .catch(function(e){
+        if(e instanceof TypeError)throw new Error('无法连接服务器');
+        throw e;
+      });
+  }
+};
+
+/* ================= 全局状态 ================= */
+var State={
+  token:LS.get('cw_token',null),
+  me:LS.get('cw_me',null),       // {username,nickname,chips}
+  users:[],                      // [{username,nickname,chips,online}]
+  convs:{},                      // convKey -> [msg]
+  games:[],                      // [gameView]
+  peer:null,                     // 当前聊天对象 username
+  lastSeq:0,
+  lastRead:LS.get('cw_lastread',{}),  // {peerUsername: ts}
+  seenInvites:{},                // 已自动弹窗过的 gameId
+  pollFail:0,
+  activeGameId:null,
+  busy:false
+};
+
+function convKey(a,b){var arr=[a,b].sort();return arr.join('__')}
+function getUser(name){for(var i=0;i<State.users.length;i++)if(State.users[i].username===name)return State.users[i];return null}
+function nickOf(name){if(name==='system')return '系统';var u=getUser(name);return u?u.nickname:name}
+function findGame(id){for(var i=0;i<State.games.length;i++)if(State.games[i].id===id)return State.games[i];return null}
+function activeGame(){for(var i=0;i<State.games.length;i++){var g=State.games[i];if(g.status==='waiting'||g.status==='playing'||g.status==='selecting')return g}return null}
+
+/* ================= 认证 ================= */
+var Auth={
+  mode:'login',
+  init:function(){
+    var self=this;
+    document.querySelectorAll('.auth-tab').forEach(function(tab){
+      tab.addEventListener('click',function(){
+        document.querySelectorAll('.auth-tab').forEach(function(t){t.classList.remove('active')});
+        tab.classList.add('active');
+        self.mode=tab.dataset.tab;
+        $('nick-field').style.display=self.mode==='register'?'block':'none';
+        $('auth-submit').textContent=self.mode==='register'?'注 册':'登 录';
+        $('auth-error').textContent='';
+      });
+    });
+    $('auth-submit').addEventListener('click',function(){self.submit()});
+    $('auth-password').addEventListener('keydown',function(e){if(e.key==='Enter')self.submit()});
+    $('auth-username').addEventListener('keydown',function(e){if(e.key==='Enter')$('auth-password').focus()});
+    if(State.token&&State.me){this.enterApp()}
+  },
+  submit:function(){
+    var u=$('auth-username').value.trim(),p=$('auth-password').value,nick=$('auth-nickname').value.trim();
+    var err=$('auth-error');err.textContent='';
+    if(u.length<3||u.length>20){err.textContent='用户名需 3-20 位字符';return}
+    if(p.length<6){err.textContent='密码至少 6 位';return}
+    var btn=$('auth-submit');btn.disabled=true;
+    var path=this.mode==='register'?'/api/register':'/api/login';
+    var data={username:u,password:p};
+    if(this.mode==='register'&&nick)data.nickname=nick;
+    Api.post(path,data).then(function(res){
+      State.token=res.token;State.me={username:res.username,nickname:res.nickname,chips:res.chips};
+      LS.set('cw_token',res.token);LS.set('cw_me',State.me);
+      btn.disabled=false;Auth.enterApp();
+    }).catch(function(e){btn.disabled=false;err.textContent=e.message||'操作失败';
+      if(e.message==='无法连接服务器')toast('无法连接服务器，请检查网络')});
+  },
+  enterApp:function(){
+    $('auth-screen').classList.add('hidden');
+    $('app-screen').classList.remove('hidden');
+    UI.refreshProfile();
+    Poll.start();
+  },
+  logout:function(){
+    Poll.stop();
+    State.token=null;State.me=null;State.users=[];State.convs={};State.games=[];State.peer=null;
+    LS.del('cw_token');LS.del('cw_me');
+    $('app-screen').classList.add('hidden');
+    $('auth-screen').classList.remove('hidden');
+    $('auth-password').value='';
+    $('game-modal').classList.add('hidden');$('game-fab').classList.add('hidden');
+  }
+};
+
+/* ================= 轮询同步 ================= */
+var Poll={
+  timer:null,
+  start:function(){this.stop();this.tick();this.timer=setInterval(this.tick.bind(this),1800)},
+  stop:function(){if(this.timer){clearInterval(this.timer);this.timer=null}},
+  tick:function(){
+    Api.post('/api/poll',{}).then(function(data){
+      State.pollFail=0;
+      $('offline-banner').classList.add('hidden');
+      Sync.apply(data);
+    }).catch(function(e){
+      State.pollFail++;
+      if(State.pollFail>=2)$('offline-banner').classList.remove('hidden');
+    });
+  }
+};
+
+/* ================= 数据同步处理 ================= */
+var Sync={
+  apply:function(data){
+    var prevMsgs=this.countMessages();
+    var prevGameStatus={};
+    State.games.forEach(function(g){prevGameStatus[g.id]=g.status});
+    // 本人信息
+    if(data.me){
+      var chipsChanged=!State.me||State.me.chips!==data.me.chips;
+      State.me={username:data.me.username,nickname:data.me.nickname,chips:data.me.chips};
+      LS.set('cw_me',State.me);
+      UI.refreshProfile();
+      if(chipsChanged&&State.lastSeq>0) {/* 筹码变化由游戏面板/toast提示 */}
+    }
+    State.users=data.users||[];
+    State.convs=data.convs||{};
+    State.games=data.games||[];
+    State.lastSeq=data.seq||State.lastSeq;
+    // 新消息提醒
+    this.checkNewMessages(prevMsgs);
+    // 联系人 & 聊天渲染
+    UI.renderContacts();
+    if(State.peer)UI.renderMessages(false);
+    UI.updatePeerHeader();
+    // 游戏：新邀请自动弹窗
+    this.checkGames(prevGameStatus);
+  },
+  countMessages:function(){
+    var n=0;for(var k in State.convs){if(State.convs[k])n+=State.convs[k].length}return n;
+  },
+  checkNewMessages:function(prevCount){
+    var newMsgs=[];
+    for(var key in State.convs){
+      var list=State.convs[key]||[];
+      for(var i=0;i<list.length;i++){
+        var m=list[i];
+        if(m.sender!==State.me.username&&m.sender!=='system'&&(!State.peer||m.sender!==State.peer)&&!m.recalled){
+          if(!Notify.seen[m.id])newMsgs.push(m);
+        }
+        Notify.seen[m.id]=true;
+      }
+    }
+    if(newMsgs.length)Notify.onNewMessages(newMsgs);
+  },
+  checkGames:function(prevStatus){
+    var act=activeGame();
+    // 浮动按钮
+    if(act){$('game-fab').classList.remove('hidden')}else{$('game-fab').classList.add('hidden')}
+    for(var i=0;i<State.games.length;i++){
+      var g=State.games[i];
+      var ps=prevStatus[g.id];
+      // 新的等待中邀请 → 自动弹出（双方）
+      if(g.status==='waiting'&&!State.seenInvites[g.id]){
+        State.seenInvites[g.id]=true;
+        Game.open(g.id);
+        if(!g.iAmHost)toast('🎮 '+g.hostNick+' 邀请你玩'+(g.type==='niuniu'?'牛牛':g.type==='showhand'?'梭哈':'炸金花'));
+      }
+      if(g.status==='waiting'||g.status==='playing'||g.status==='selecting')State.seenInvites[g.id]=true;
+      // 正在展示的游戏刷新（发牌动画期间不打断）
+      if(State.activeGameId===g.id&&!Game.dealing)Game.render(g);
+      // 游戏结束提示
+      if((ps==='playing'||ps==='selecting')&&g.status==='ended'){
+        toast(g.result||'游戏结束');
+        if(State.activeGameId===g.id)Game.render(g);
+        Notify.beep();
+      }
+    }
+  }
+};
+
+/* ================= 通知 ================= */
+var Notify={
+  seen:{},
+  enabled:function(){return LS.get('cw_notify',true)},
+  setEnabled:function(v){LS.set('cw_notify',v)},
+  onNewMessages:function(msgs){
+    UI.renderContacts();
+    TitleBadge.setBadge(this.totalUnread());
+    if(!this.enabled())return;
+    this.beep();
+    this.vibrate();
+    this.desktop(msgs[0]);
+  },
+  totalUnread:function(){
+    var total=0;
+    for(var key in State.convs){
+      var parts=key.split('__'),peer=parts[0]===State.me.username?parts[1]:parts[0];
+      if(peer==='system')continue;
+      if(State.peer===peer)continue;
+      var since=State.lastRead[peer]||0;
+      var list=State.convs[key]||[];
+      for(var i=0;i<list.length;i++){
+        if(list[i].sender===peer&&!list[i].recalled&&list[i].ts>since)total++;
+      }
+    }
+    return total;
+  },
+  beep:function(){
+    try{
+      var ctx=new(window.AudioContext||window.webkitAudioContext)();
+      var o=ctx.createOscillator(),g=ctx.createGain();
+      o.connect(g);g.connect(ctx.destination);
+      o.frequency.value=880;o.type='sine';
+      g.gain.setValueAtTime(0.15,ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.35);
+      o.start();o.stop(ctx.currentTime+0.35);
+    }catch(e){}
+  },
+  vibrate:function(){try{if(navigator.vibrate)navigator.vibrate([120,60,120])}catch(e){}},
+  desktop:function(msg){
+    try{
+      if(document.visibilityState==='visible'&&State.peer===msg.sender)return;
+      if('Notification'in window){
+        if(Notification.permission==='granted'){
+          new Notification('💬 '+nickOf(msg.sender),{body:msg.type==='image'?'[图片]':(msg.type==='game_invite'?'邀请你玩游戏':msg.content.slice(0,60))});
+        }else if(Notification.permission!=='denied'){Notification.requestPermission()}
+      }
+    }catch(e){}
+  }
+};
+var TitleBadge={
+  timer:null,orig:document.title,
+  setBadge:function(n){
+    if(n>0){document.title='('+n+') '+this.orig}else{document.title=this.orig}
+  }
+};
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState==='visible'){TitleBadge.setBadge(0)}
+});
+
+/* ================= 聊天 ================= */
+var Chat={
+  send:function(){
+    var inp=$('msg-input'),text=inp.value.trim();
+    if(!text||!State.peer)return;
+    inp.value='';inp.style.height='auto';
+    Api.post('/api/messages',{peer:State.peer,type:'text',content:text}).catch(function(e){toast(e.message)});
+    Poll.tick();
+  },
+  sendImage:function(file){
+    if(!file||!State.peer)return;
+    if(file.size>15*1024*1024){toast('图片请小于 15MB');return}
+    var reader=new FileReader();
+    reader.onload=function(e){
+      var img=new Image();
+      img.onload=function(){
+        var max=900,w=img.width,h=img.height;
+        if(w>max||h>max){if(w>h){h=h*max/w;w=max}else{w=w*max/h;h=max}}
+        var cv=document.createElement('canvas');cv.width=w;cv.height=h;
+        cv.getContext('2d').drawImage(img,0,0,w,h);
+        var dataUrl=cv.toDataURL('image/jpeg',0.72);
+        toast('图片发送中…');
+        Api.post('/api/messages',{peer:State.peer,type:'image',content:dataUrl})
+          .then(function(){Poll.tick()}).catch(function(e){toast(e.message)});
+      };
+      img.src=e.target.result;
+    };
+    reader.readAsDataURL(file);
+  },
+  recall:function(msgId){
+    Api.post('/api/messages/recall',{msgId:msgId}).then(function(){Poll.tick()}).catch(function(e){toast(e.message)});
+  },
+  copy:function(text){
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){toast('已复制')}).catch(function(){this.fallbackCopy(text)}.bind(this));
+    }else this.fallbackCopy(text);
+  },
+  fallbackCopy:function(text){
+    var ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');toast('已复制')}catch(e){toast('复制失败')}
+    document.body.removeChild(ta);
+  },
+  clearHistory:function(){
+    if(!State.peer)return;
+    var name=nickOf(State.peer);
+    if(!confirm('确定清空与「'+name+'」的全部聊天记录吗？\n双方设备上的记录都会被删除，且无法恢复。'))return;
+    Api.post('/api/messages/clear',{peer:State.peer}).then(function(){
+      delete State.convs[convKey(State.me.username,State.peer)];
+      UI.renderMessages(true);
+      toast('聊天记录已清空');
+      Poll.tick();
+    }).catch(function(e){toast(e.message)});
+  }
+};
+
+/* ================= 游戏 ================= */
+var Game={
+  createType:'niuniu',
+  selIdx:[],
+  dealtGames:{},
+  dealing:false,
+  toggleSel:function(idx){
+    var pos=this.selIdx.indexOf(idx);
+    if(pos>=0){this.selIdx.splice(pos,1)}
+    else if(this.selIdx.length<3){this.selIdx.push(idx)}
+    else{toast('最多选3张牌');return}
+    var g=findGame(State.activeGameId);
+    if(g&&g.status==='selecting')this.render(g);
+  },
+  // 客户端检查特殊牌型
+  checkSpecialClient:function(cards){
+    if(!cards||cards.length<5)return null;
+    var bigCount=0,sum=0,allBig=true;
+    for(var i=0;i<5;i++){var v=cards[i].nv;sum+=v;if(cards[i].v>5)bigCount++;if(cards[i].v<11)allBig=false}
+    if(bigCount===0&&sum<=10)return{name:'五小牛'};
+    if(allBig)return{name:'五花牛'};
+    var counts={};
+    for(var j=0;j<5;j++){var k=cards[j].v;counts[k]=(counts[k]||0)+1}
+    for(var key in counts){if(counts[key]>=4)return{name:'炸弹'}}
+    return null;
+  },
+  // 发牌动画
+  doDeal:function(g){
+    if(this.dealing)return;
+    this.dealing=true;
+    var self=this;
+    var panel=$('game-panel');
+    var slots=panel.querySelectorAll('.gp-card-slot');
+    for(var i=0;i<slots.length;i++){slots[i].className='gp-card-slot dealing';slots[i].innerHTML='<div class="pcard back"></div>'}
+    var delay=0;
+    for(var i=0;i<5;i++){
+      (function(idx,d){
+        setTimeout(function(){
+          var slot=panel.querySelectorAll('.gp-card-slot')[idx];
+          if(slot){
+            slot.className='gp-card-slot dealt';
+            slot.innerHTML=self.cardHtml(g.myCards[idx],true,false);
+          }
+          if(idx===4){
+            setTimeout(function(){
+              self.dealing=false;
+              self.dealtGames[g.id]=true;
+              self.render(g);
+            },400);
+          }
+        },d);
+      })(i,delay);
+      delay+=350;
+    }
+  },
+  openCreate:function(){
+    if(!State.peer){toast('请先选择一位联系人');return}
+    var u=getUser(State.peer);
+    if(u&&!u.online)toast('对方当前不在线，邀请可能无法及时收到');
+    $('game-create-modal').classList.remove('hidden');
+  },
+  submitCreate:function(){
+    var bet=parseInt($('game-bet-input').value,10)||50;
+    if(bet<10){toast('底注至少 10');return}
+    if(State.me.chips<bet){toast('你的筹码不足，请先充值');this.openRecharge();return}
+    var peer=State.peer,type=this.createType;
+    Api.post('/api/game/create',{peer:peer,type:type,bet:bet}).then(function(){
+      $('game-create-modal').classList.add('hidden');
+      toast('邀请已发送');Poll.tick();
+      setTimeout(function(){Poll.tick()},600);
+    }).catch(function(e){toast(e.message)});
+  },
+  open:function(gameId){
+    var g=findGame(gameId);
+    if(!g)return;
+    // 重置选牌状态（如果是新开的局或之前未发牌）
+    if(g.status==='selecting'&&!this.dealtGames[gameId])this.selIdx=[];
+    if(g.status==='ended')this.selIdx=[];
+    State.activeGameId=gameId;
+    $('game-modal').classList.remove('hidden');
+    this.render(g);
+  },
+  close:function(){State.activeGameId=null;$('game-modal').classList.add('hidden')},
+  action:function(gameId,act,extra){
+    var data={gameId:gameId,act:act};
+    if(extra)for(var k in extra)data[k]=extra[k];
+    Api.post('/api/game/action',data).then(function(){Poll.tick()}).catch(function(e){toast(e.message);Poll.tick()});
+  },
+  playAgain:function(g){
+    var bet=g.bet;
+    Api.post('/api/game/create',{peer:g.iAmHost?g.guest:g.host,type:g.type,bet:bet}).then(function(){
+      Game.close();toast('新邀请已发送');Poll.tick();
+      setTimeout(function(){Poll.tick()},600);
+    }).catch(function(e){toast(e.message)});
+  },
+  openRecharge:function(){$('recharge-modal').classList.remove('hidden')},
+  cardHtml:function(card,faceUp,win){
+    if(!faceUp)return '<div class="pcard back"></div>';
+    var red=(card.s==='♥'||card.s==='♦')?' red':'';
+    var w=win?' win':'';
+    return '<div class="pcard'+red+w+'"><span class="rank">'+esc(card.r)+'</span><span class="suit">'+esc(card.s)+'</span></div>';
+  },
+  render:function(g){
+    var panel=$('game-panel');
+    var typeName=g.type==='niuniu'?'🐂 牛牛':(g.type==='showhand'?'🎴 梭哈（港式五张）':'🃏 炸金花');
+    var typeIcon=g.type==='niuniu'?'🐂':(g.type==='showhand'?'🎴':'🃏');
+    var html='<div class="gp-head"><div class="gp-title">'+typeName+'</div><button class="gp-close" id="gp-close">✕</button></div><div class="gp-table">';
+
+    if(g.status==='waiting'){
+      html+='<div class="gp-waiting"><div class="big">'+typeIcon+'</div>';
+      html+='<p>'+esc(g.hostNick)+' 邀请 '+esc(g.guestNick)+' 玩<b>'+typeName.split(' ')[1]+'</b><br>底注 <span class="gp-bet">'+g.bet+'</span> 筹码（双方各出）</p>';
+      html+='<div class="gp-status" style="margin-top:14px">⏳ '+esc(g.lastAction||'等待回应')+'</div></div>';
+      html+='</div><div class="gp-actions">';
+      if(g.iAmHost){
+        html+='<button class="gp-btn" disabled>⏳ 等待对方接受…</button>';
+      }else{
+        html+='<button class="gp-btn danger" data-gact="decline">拒 绝</button>';
+        html+='<button class="gp-btn primary" data-gact="join">✅ 接受挑战</button>';
+      }
+      html+='</div>';
+      panel.innerHTML=html;this.bindButtons(g);return;
+    }
+
+    // ====== 牛牛：选牌阶段 ======
+    if(g.type==='niuniu'&&g.status==='selecting'){
+      var isDealt=this.dealtGames[g.id]||false;
+      var mc=g.myCards||[];
+      var sp=this.checkSpecialClient(mc);
+
+      // 对手区（暗牌）
+      var oppTag2='';
+      if(g.oppSubmitted)oppTag2='<span class="gp-tag">已确认</span>';else oppTag2='<span class="gp-tag">选牌中…</span>';
+      html+='<div class="gp-player"><div class="gp-pname">🙋 '+esc(g.oppNick)+oppTag2+'</div><div class="gp-cards">';
+      for(var oi=0;oi<5;oi++)html+='<div class="pcard back"></div>';
+      html+='</div></div>';
+
+      // 中央
+      html+='<div class="gp-center"><div class="gp-pot">💰 奖池 '+g.pot+' 筹码';
+      html+='<small>选3张牌凑10的倍数=有牛，剩2张定牛数</small>';
+      html+='</div><div class="gp-status">'+esc(g.lastAction||'')+'</div></div>';
+
+      // 我的牌区
+      var myTag2='';
+      if(g.mySubmitted)myTag2='<span class="gp-tag">已确认</span>';
+      else if(isDealt)myTag2='<span class="gp-tag turn">请选牌</span>';
+      html+='<div class="gp-player me"><div class="gp-cards" style="gap:8px">';
+      if(!isDealt){
+        // 未发牌：显示5个背面占位 + 发牌按钮
+        for(var pi=0;pi<5;pi++)html+='<div class="gp-card-slot dealing"><div class="pcard back"></div></div>';
+        html+='</div><div class="gp-sel-hint">点下方按钮发牌</div>';
+        html+='<div class="gp-pname">🧑 '+esc(g.myNick)+'（你）</div></div>';
+        html+='</div><div class="gp-actions">';
+        html+='<button class="gp-btn primary" id="gp-deal-btn">🎴 发 牌</button>';
+      }else{
+        // 已发牌：显示正面牌，可选
+        var canSelect=!g.mySubmitted&&!this.dealing;
+        for(var ci=0;ci<5;ci++){
+          var isSel=this.selIdx.indexOf(ci)>=0;
+          var cls='gp-card-slot dealt'+(canSelect?' selectable':'')+(isSel?' selected':'');
+          html+='<div class="'+cls+'" data-cardidx="'+ci+'">'+this.cardHtml(mc[ci],true,false)+'</div>';
+        }
+        html+='</div><div class="gp-sel-hint">';
+        if(g.mySubmitted){
+          html+='已确认：'+esc(g.myResult?g.myResult.name:'')+'，等待对方…';
+        }else if(sp){
+          html+='检测到特殊牌型：'+sp.name;
+        }else{
+          html+='已选 '+this.selIdx.length+'/3 张'+(this.selIdx.length===3?' — 点确认提交':'');
+        }
+        html+='</div>';
+        html+='<div class="gp-pname">🧑 '+esc(g.myNick)+'（你）'+myTag2+'</div></div>';
+        html+='</div><div class="gp-actions">';
+        if(g.mySubmitted){
+          html+='<button class="gp-btn" disabled>⏳ 等待对方确认…</button>';
+        }else if(sp){
+          html+='<button class="gp-btn primary" data-gact="confirmspecial">✅ 确认 '+esc(sp.name)+'</button>';
+        }else{
+          html+='<button class="gp-btn primary" data-gact="select" '+(this.selIdx.length===3?'':'disabled')+'>✅ 确认牛组合</button>';
+          html+='<button class="gp-btn" data-gact="noniu">🚫 没 牛</button>';
+        }
+      }
+      html+='</div>';
+      panel.innerHTML=html;
+      this.bindButtons(g);
+      // 绑定选牌点击
+      if(isDealt&&!g.mySubmitted){
+        var self=this;
+        var slots=panel.querySelectorAll('[data-cardidx]');
+        for(var si=0;si<slots.length;si++){
+          slots[si].onclick=function(){self.toggleSel(parseInt(this.dataset.cardidx,10))};
+        }
+      }
+      // 绑定发牌按钮
+      var dealBtn=$('gp-deal-btn');
+      if(dealBtn)dealBtn.onclick=function(){Game.doDeal(g)};
+      return;
+    }
+
+    // ====== 牛牛：已结束 ======
+    if(g.type==='niuniu'&&g.status==='ended'){
+      // 对手区（翻开，高亮选牌）
+      html+='<div class="gp-player"><div class="gp-pname">🙋 '+esc(g.oppNick)+'</div><div class="gp-cards" style="gap:8px">';
+      var oc2=g.oppCards||[];
+      for(var oi2=0;oi2<5;oi2++){
+        var isOppNiu=g.oppSelection&&g.oppSelection.indexOf(oi2)>=0;
+        var cls2=isOppNiu?'gp-card-slot niu-card':'gp-card-slot';
+        html+='<div class="'+cls2+'">'+this.cardHtml(oc2[oi2]||{r:'?',s:'?'},true,g.winner===g.oppName)+'</div>';
+      }
+      html+='</div></div>';
+
+      html+='<div class="gp-center"><div class="gp-pot">💰 奖池 '+g.pot+' 筹码<small>底注 '+g.bet+' / 人</small></div>';
+      html+='<div class="gp-status">'+esc(g.lastAction||'')+'</div></div>';
+      html+='<div class="gp-result">🏁 '+esc(g.result||'游戏结束')+'</div>';
+
+      // 我的牌区（翻开，高亮选牌）
+      html+='<div class="gp-player me"><div class="gp-cards" style="gap:8px">';
+      var mc3=g.myCards||[];
+      for(var mi2=0;mi2<5;mi2++){
+        var isMyNiu=g.mySelection&&g.mySelection.indexOf(mi2)>=0;
+        var cls3=isMyNiu?'gp-card-slot niu-card':'gp-card-slot';
+        html+='<div class="'+cls3+'">'+this.cardHtml(mc3[mi2]||{r:'?',s:'?'},true,g.winner===g.myName)+'</div>';
+      }
+      html+='</div><div class="gp-pname">🧑 '+esc(g.myNick)+'（你）</div></div>';
+      html+='</div><div class="gp-actions">';
+      html+='<button class="gp-btn" data-gact="close">关 闭</button>';
+      html+='<button class="gp-btn primary" data-gact="again">🔁 再来一局</button>';
+      html+='</div>';
+      panel.innerHTML=html;
+      this.bindButtons(g);
+      return;
+    }
+
+    // ====== 梭哈（港式五张） ======
+    if(g.type==='showhand'){
+      var myUp=g.myUp||[],oppUp=g.oppUp||[];
+      var shTurn=(g.status==='playing'&&g.turn===g.myName);
+      var winSide=null;
+      if(g.status==='ended'){winSide=(g.winner===g.myName)?'me':(g.winner===g.oppName?'opp':null)}
+      // 对手行：明牌双方可见，底牌仅摊牌后翻开
+      var sht='';
+      if(g.status==='playing'){
+        if(g.oppFolded)sht='<span class="gp-tag fold">已弃牌</span>';
+        if(g.turn===g.oppName)sht+='<span class="gp-tag turn">对方操作中</span>';
+      }
+      html+='<div class="gp-player"><div class="gp-pname">🙋 '+esc(g.oppNick)+sht+'</div><div class="gp-cards" style="gap:8px">';
+      html+='<div class="gp-card-slot hole sh-slot">'+(g.oppHole?this.cardHtml(g.oppHole,true,winSide==='opp'):'<div class="pcard back"></div>')+'</div>';
+      for(var su=0;su<4;su++){
+        if(oppUp[su])html+='<div class="gp-card-slot sh-slot">'+this.cardHtml(oppUp[su],true,winSide==='opp')+'</div>';
+        else html+='<div class="gp-card-slot empty-slot"></div>';
+      }
+      html+='</div></div>';
+      // 中央
+      html+='<div class="gp-center"><div class="gp-pot">💰 奖池 '+g.pot+' 筹码';
+      html+='<small>第 '+g.street+'/4 张明牌 · 本轮需跟 '+(g.currentBet||0)+' · 你已投 '+g.myStreetPaid+'</small></div>';
+      html+='<div class="gp-status">'+esc(g.lastAction||'')+'</div></div>';
+      if(g.status==='ended')html+='<div class="gp-result">🏁 '+esc(g.result||'游戏结束')+'</div>';
+      // 我的行：自己的底牌始终可见
+      var mht='';
+      if(g.status==='playing'){
+        if(g.myFolded)mht='<span class="gp-tag fold">已弃牌</span>';
+        if(shTurn)mht+='<span class="gp-tag turn">轮到你了</span>';
+      }
+      html+='<div class="gp-player me"><div class="gp-cards" style="gap:8px">';
+      html+='<div class="gp-card-slot hole sh-slot">'+(g.myHole?this.cardHtml(g.myHole,true,winSide==='me'):'<div class="pcard back"></div>')+'</div>';
+      for(var mu=0;mu<4;mu++){
+        if(myUp[mu])html+='<div class="gp-card-slot sh-slot">'+this.cardHtml(myUp[mu],true,winSide==='me')+'</div>';
+        else html+='<div class="gp-card-slot empty-slot"></div>';
+      }
+      html+='</div><div class="gp-pname">🧑 '+esc(g.myNick)+'（你）<span class="gp-tag hole-tag">底牌</span>'+mht+'</div></div>';
+      html+='</div>';
+      html+='<div class="gp-actions">';
+      if(g.status==='ended'){
+        html+='<button class="gp-btn" data-gact="close">关 闭</button>';
+        html+='<button class="gp-btn primary" data-gact="again">🔁 再来一局</button>';
+      }else{
+        var shCall=(g.currentBet||0)-(g.myStreetPaid||0);
+        var shRaise=((g.currentBet||0)===0)?g.bet:(g.currentBet*2)-(g.myStreetPaid||0);
+        var dis=shTurn?'':'disabled';
+        html+='<button class="gp-btn primary" data-gact="call" '+dis+'>'+(shCall===0?'✔️ 过 牌':'✔️ 跟注 '+shCall)+'</button>';
+        html+='<button class="gp-btn primary" data-gact="raise" '+dis+'>⬆️ 加注 '+shRaise+'</button>';
+        html+='<button class="gp-btn danger" data-gact="fold" '+dis+'>🏳️ 弃 牌</button>';
+      }
+      html+='</div>';
+      panel.innerHTML=html;
+      this.bindButtons(g);
+      return;
+    }
+
+    // ====== 炸金花：原逻辑 ======
+    // 对手区
+    var oppFaceUp=!!g.oppSeen;
+    var oppTag='';
+    if(g.status==='playing'){
+      if(g.oppFolded)oppTag='<span class="gp-tag fold">已弃牌</span>';
+      else if(g.type==='zhajinhua'&&g.oppLooked)oppTag='<span class="gp-tag">已看牌</span>';
+      if(g.turn===g.oppName)oppTag+='<span class="gp-tag turn">对方操作中</span>';
+    }
+    html+='<div class="gp-player"><div class="gp-pname">🙋 '+esc(g.oppNick)+oppTag+'</div><div class="gp-cards">';
+    var oc=g.oppCards||[];
+    for(var i=0;i<(g.type==='niuniu'?5:3);i++){
+      html+=this.cardHtml(oc[i]||{r:'?',s:'?'},oppFaceUp,g.status==='ended'&&g.winner===g.oppName);
+    }
+    html+='</div></div>';
+
+    // 中央信息
+    html+='<div class="gp-center"><div class="gp-pot">💰 奖池 '+g.pot+' 筹码';
+    html+='<small>当前单注 '+g.currentBet+'　第 '+Math.ceil((g.round+1)/2)+' 轮　看牌后跟注/加注翻倍</small>';
+    html+='</div><div class="gp-status">'+esc(g.lastAction||'')+'</div></div>';
+
+    if(g.status==='ended'){
+      html+='<div class="gp-result">🏁 '+esc(g.result||'游戏结束')+'</div>';
+    }
+
+    // 我的牌区
+    var myTag='';
+    if(g.status==='playing'){
+      if(g.myFolded)myTag='<span class="gp-tag fold">已弃牌</span>';
+      else if(g.type==='zhajinhua'&&g.myLooked)myTag='<span class="gp-tag">已看牌</span>';
+      if(g.turn===g.myName)myTag+='<span class="gp-tag turn">轮到你了</span>';
+    }
+    html+='<div class="gp-player me"><div class="gp-cards">';
+    var mc=g.myCards||[];
+    for(var j=0;j<(g.type==='niuniu'?5:3);j++){
+      html+=this.cardHtml(mc[j]||{r:'?',s:'?'},!!g.showMyCards,g.status==='ended'&&g.winner===g.myName);
+    }
+    html+='</div><div class="gp-pname">🧑 '+esc(g.myNick)+'（你）'+myTag+'</div></div>';
+    html+='</div>'; // /gp-table
+
+    // 操作按钮
+    html+='<div class="gp-actions">';
+    if(g.status==='ended'){
+      html+='<button class="gp-btn" data-gact="close">关 闭</button>';
+      html+='<button class="gp-btn primary" data-gact="again">🔁 再来一局</button>';
+    }else{
+      // 炸金花
+      if(!g.myLooked){
+        html+='<button class="gp-btn" data-gact="look">👀 看 牌</button>';
+      }
+      var myTurn=(g.turn===g.myName);
+      var callCost=g.myLooked?g.currentBet*2:g.currentBet;
+      var raiseCost=g.myLooked?g.currentBet*4:g.currentBet*2;
+      html+='<button class="gp-btn primary" data-gact="call" '+(myTurn?'':'disabled')+'>✔️ 跟注 '+callCost+'</button>';
+      html+='<button class="gp-btn primary" data-gact="raise" '+(myTurn?'':'disabled')+'>⬆️ 加注 '+raiseCost+'</button>';
+      html+='<button class="gp-btn" data-gact="compare" '+(myTurn&&g.myLooked?'':'disabled')+'>⚖️ 比 牌</button>';
+      html+='<button class="gp-btn danger" data-gact="fold" '+(myTurn?'':'disabled')+'>🏳️ 弃 牌</button>';
+    }
+    html+='</div>';
+    panel.innerHTML=html;
+    this.bindButtons(g);
+  },
+  bindButtons:function(g){
+    var self=this;
+    var close=$('gp-close');
+    if(close)close.onclick=function(){self.close()};
+    var btns=document.querySelectorAll('#game-panel [data-gact]');
+    for(var i=0;i<btns.length;i++){
+      btns[i].onclick=function(){
+        var act=this.dataset.gact;
+        if(act==='close'){self.close();return}
+        if(act==='again'){self.playAgain(g);return}
+        if(act==='join'||act==='decline'){
+          if(act==='decline'&&!confirm('确定拒绝这局游戏邀请吗？'))return;
+          self.action(g.id,act);
+        }else if(act==='select'){
+          // 提交选牌
+          var selCopy=self.selIdx.slice(0);
+          self.action(g.id,'select',{selIdx:selCopy});
+          self.selIdx=[];
+        }else if(act==='noniu'||act==='confirmspecial'){
+          self.action(g.id,act);
+          self.selIdx=[];
+        }else{
+          self.action(g.id,act);
+        }
+      };
+    }
+  }
+};
+
+/* ================= 充值 / 昵称 ================= */
+var Recharge={amt:1000,
+  init:function(){
+    var self=this;
+    document.querySelectorAll('.rc-opt[data-amt]').forEach(function(b){
+      b.addEventListener('click',function(){
+        document.querySelectorAll('.rc-opt[data-amt]').forEach(function(x){x.classList.remove('sel')});
+        b.classList.add('sel');self.amt=parseInt(b.dataset.amt,10);
+      });
+    });
+    $('recharge-submit').addEventListener('click',function(){
+      var pwd=$('recharge-pwd').value;
+      if(!pwd){toast('请输入充值密码');return}
+      Api.post('/api/chips/recharge',{pwd:pwd,amount:self.amt}).then(function(res){
+        if(State.me)State.me.chips=res.chips;
+        UI.refreshProfile();
+        toast('充值成功！当前筹码 '+res.chips);
+        $('recharge-pwd').value='';
+        $('recharge-modal').classList.add('hidden');
+        Poll.tick();
+      }).catch(function(e){toast(e.message)});
+    });
+  }
+};
+
+/* ================= UI ================= */
+var UI={
+  openMenuMsg:null,
+  init:function(){
+    var self=this;
+    // 退出
+    $('logout-btn').addEventListener('click',function(){if(confirm('确定退出登录吗？'))Auth.logout()});
+    // 手机菜单
+    $('mobile-menu-btn').addEventListener('click',Sidebar.open);
+    $('sidebar-overlay').addEventListener('click',Sidebar.close);
+    // 昵称
+    $('edit-nick-btn').addEventListener('click',function(){
+      $('nick-input').value=State.me?State.me.nickname:'';
+      $('nick-modal').classList.remove('hidden');
+    });
+    $('nick-save').addEventListener('click',function(){
+      var n=$('nick-input').value.trim();
+      if(n.length<1||n.length>20){toast('昵称需 1-20 字');return}
+      Api.post('/api/nickname',{nickname:n}).then(function(){
+        if(State.me)State.me.nickname=n;
+        UI.refreshProfile();UI.renderContacts();
+        $('nick-modal').classList.add('hidden');toast('昵称已修改');Poll.tick();
+      }).catch(function(e){toast(e.message)});
+    });
+    // 充值
+    $('recharge-btn').addEventListener('click',function(){$('recharge-modal').classList.remove('hidden')});
+    Recharge.init();
+    // 游戏类型选择
+    document.querySelectorAll('.rc-opt[data-gtype]').forEach(function(b){
+      b.addEventListener('click',function(){
+        document.querySelectorAll('.rc-opt[data-gtype]').forEach(function(x){x.classList.remove('game-type-sel','sel')});
+        b.classList.add('game-type-sel','sel');
+        Game.createType=b.dataset.gtype;
+      });
+    });
+    $('sidebar-game-btn').addEventListener('click',function(){Game.openCreate()});
+    $('invite-game-btn').addEventListener('click',function(){Game.openCreate()});
+    $('game-create-submit').addEventListener('click',function(){Game.submitCreate()});
+    $('game-fab').addEventListener('click',function(){var g=activeGame();if(g)Game.open(g.id)});
+    // 清空记录
+    $('clear-chat-btn').addEventListener('click',function(){Chat.clearHistory()});
+    // 提醒开关
+    var sw=$('notify-switch');
+    if(Notify.enabled())sw.classList.add('on');else sw.classList.remove('on');
+    sw.addEventListener('click',function(){
+      var on=!sw.classList.contains('on');
+      sw.classList.toggle('on',on);Notify.setEnabled(on);
+      if(on&&'Notification'in window&&Notification.permission==='default')Notification.requestPermission();
+      toast(on?'消息提醒已开启':'消息提醒已关闭');
+    });
+    // 发消息
+    $('send-btn').addEventListener('click',function(){Chat.send()});
+    $('msg-input').addEventListener('keydown',function(e){
+      if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();Chat.send()}
+    });
+    $('msg-input').addEventListener('input',function(){
+      this.style.height='auto';this.style.height=Math.min(this.scrollHeight,110)+'px';
+    });
+    $('img-btn').addEventListener('click',function(){$('img-file').click()});
+    $('img-file').addEventListener('change',function(){
+      if(this.files&&this.files[0])Chat.sendImage(this.files[0]);
+      this.value='';
+    });
+    // 通用关闭
+    document.querySelectorAll('[data-close]').forEach(function(b){
+      b.addEventListener('click',function(){$(b.dataset.close).classList.add('hidden')});
+    });
+    // 点击遮罩关闭弹窗（游戏面板除外，防止误触）
+    document.querySelectorAll('.overlay').forEach(function(ov){
+      ov.addEventListener('click',function(e){
+        if(e.target===ov&&ov.id!=='game-modal'&&ov.id!=='img-preview')ov.classList.add('hidden');
+      });
+    });
+    // 图片预览
+    $('img-preview').addEventListener('click',function(){$('img-preview').classList.add('hidden')});
+    // 点击空白关闭消息菜单
+    document.addEventListener('click',function(e){
+      if(!e.target.closest('.msg-menu')&&!e.target.closest('.bubble')){
+        var m=document.querySelector('.msg-menu');if(m)m.remove();
+      }
+    });
+  },
+  refreshProfile:function(){
+    if(!State.me)return;
+    $('my-nickname').textContent=State.me.nickname;
+    $('my-username').textContent='@'+State.me.username;
+    $('my-avatar').textContent=nickChar(State.me.nickname);
+    $('my-avatar').style.background=avatarColor(State.me.username);
+    $('my-chips').textContent=State.me.chips;
+  },
+  renderContacts:function(){
+    var box=$('contact-list');
+    var others=State.users.filter(function(u){return State.me&&u.username!==State.me.username});
+    others.sort(function(a,b){
+      if(a.online!==b.online)return a.online?-1:1;
+      return a.nickname<b.nick?-1:1;
+    });
+    if(!others.length){
+      box.innerHTML='<div class="no-contacts">暂无其他注册用户<br><br>让朋友用手机访问同一服务器地址<br>注册账号后，就会显示在这里 👇</div>';
+      return;
+    }
+    var html='';
+    for(var i=0;i<others.length;i++){
+      var u=others[i];
+      var unread=this.unreadCount(u.username);
+      var active=State.peer===u.username?' active':'';
+      html+='<div class="contact-item'+active+'" data-user="'+esc(u.username)+'">'+
+        '<div class="contact-avatar"><div class="avatar" style="background:'+avatarColor(u.username)+';width:44px;height:44px;font-size:18px">'+esc(nickChar(u.nickname))+'</div>'+
+        '<div class="online-dot'+(u.online?' on':'')+'"></div></div>'+
+        '<div class="contact-info"><div class="contact-name">'+esc(u.nickname)+'</div>'+
+        '<div class="contact-user">@'+esc(u.username)+(u.online?' · 在线':' · 离线')+'</div></div>'+
+        (unread?'<div class="unread-badge">'+unread+'</div>':'')+
+        '</div>';
+    }
+    box.innerHTML=html;
+    var self=this;
+    box.querySelectorAll('.contact-item').forEach(function(item){
+      item.addEventListener('click',function(){self.selectPeer(item.dataset.user)});
+    });
+  },
+  unreadCount:function(peer){
+    if(State.peer===peer)return 0;
+    var list=State.convs[convKey(State.me.username,peer)]||[];
+    var since=State.lastRead[peer]||0,n=0;
+    for(var i=0;i<list.length;i++){if(list[i].sender===peer&&!list[i].recalled&&list[i].ts>since)n++}
+    return n;
+  },
+  selectPeer:function(username){
+    State.peer=username;
+    State.lastRead[username]=Date.now();
+    LS.set('cw_lastread',State.lastRead);
+    $('chat-empty').classList.add('hidden');
+    $('chat-main').classList.remove('hidden');
+    this.updatePeerHeader();
+    this.renderContacts();
+    this.renderMessages(true);
+    TitleBadge.setBadge(0);
+    Sidebar.close();
+    setTimeout(function(){$('msg-input').focus()},100);
+  },
+  updatePeerHeader:function(){
+    if(!State.peer)return;
+    var u=getUser(State.peer);
+    $('peer-nickname').textContent=u?u.nickname:State.peer;
+    var st=$('peer-status');
+    if(u&&u.online){st.textContent='● 在线';st.className='header-status online'}
+    else{st.textContent='○ 离线';st.className='header-status'}
+  },
+  renderMessages:function(scrollBottom){
+    if(!State.peer)return;
+    var box=$('messages');
+    var list=State.convs[convKey(State.me.username,State.peer)]||[];
+    if(!list.length){box.innerHTML='<div class="msg-system">还没有消息，发个招呼吧 👋</div>';return}
+    var html='';
+    for(var i=0;i<list.length;i++){
+      var m=list[i];
+      if(m.type==='system'){
+        html+='<div class="msg-system">'+esc(m.content)+'</div>';
+        continue;
+      }
+      if(m.recalled){
+        html+='<div class="msg-recalled">'+(m.sender===State.me.username?'你':esc(nickOf(m.sender)))+' 撤回了一条消息</div>';
+        continue;
+      }
+      var mine=m.sender===State.me.username;
+      var senderNick=mine?State.me.nickname:nickOf(m.sender);
+      var color=avatarColor(m.sender);
+      html+='<div class="msg-row '+(mine?'me':'other')+'" data-mid="'+esc(m.id)+'">';
+      html+='<div class="msg-avatar" style="background:'+color+'">'+esc(nickChar(senderNick))+'</div>';
+      html+='<div class="msg-body"><div class="msg-sender">'+esc(senderNick)+'</div>';
+      if(m.type==='image'){
+        html+='<div class="bubble"><img src="'+m.content+'" alt="图片" data-img="1"></div>';
+      }else if(m.type==='game_invite'){
+        var g=findGame(m.gameId);
+        html+=this.gameCardHtml(m,g);
+      }else{
+        html+='<div class="bubble" data-copy="'+esc(m.content)+'">'+esc(m.content)+'</div>';
+      }
+      html+='<div class="msg-time">'+fmtTime(m.ts)+'</div></div></div>';
+    }
+    box.innerHTML=html;
+    this.bindMessageEvents(box);
+    if(scrollBottom!==false)box.scrollTop=box.scrollHeight;
+  },
+  gameCardHtml:function(m,g){
+    var mine=m.sender===State.me.username;
+    var typeName=m.content;
+    var inner='<div class="game-card"><div class="game-card-title">🎮 '+esc(typeName)+'邀请</div>';
+    if(!g||g.status==='waiting'){
+      inner+='<div class="game-card-desc">'+(mine?'等待对方接受邀请…':esc(nickOf(m.sender))+' 邀请你玩'+esc(typeName)+'，底注 '+(g?g.bet:50)+' 筹码')+'</div><div class="game-card-btns">';
+      if(!mine){
+        inner+='<button class="gc-btn ghost" data-inv="decline" data-gid="'+esc(m.gameId)+'">拒绝</button>';
+        inner+='<button class="gc-btn primary" data-inv="join" data-gid="'+esc(m.gameId)+'">接受</button>';
+      }else{
+        inner+='<button class="gc-btn primary" data-inv="open" data-gid="'+esc(m.gameId)+'">查看</button>';
+      }
+    }else{
+      inner+='<div class="game-card-desc">'+esc(g.result||g.lastAction||'游戏已结束')+'</div><div class="game-card-btns">';
+      inner+='<button class="gc-btn primary" data-inv="open" data-gid="'+esc(m.gameId)+'">查看结果</button>';
+    }
+    inner+='</div></div>';
+    return inner;
+  },
+  bindMessageEvents:function(box){
+    var self=this;
+    // 图片预览
+    box.querySelectorAll('img[data-img]').forEach(function(im){
+      im.addEventListener('click',function(){
+        $('img-preview-img').src=im.src;$('img-preview').classList.remove('hidden');
+      });
+    });
+    // 邀请按钮
+    box.querySelectorAll('[data-inv]').forEach(function(b){
+      b.addEventListener('click',function(e){
+        e.stopPropagation();
+        var gid=b.dataset.gid,act=b.dataset.inv;
+        if(act==='open'){Game.open(gid);return}
+        if(act==='decline'){if(confirm('确定拒绝这局游戏邀请吗？'))Game.action(gid,'decline');return}
+        if(act==='join'){
+          var g=findGame(gid);
+          if(g&&State.me.chips<g.bet){toast('你的筹码不足，请先充值');Game.openRecharge();return}
+          Game.action(gid,'join');
+          setTimeout(function(){Game.open(gid)},500);
+        }
+      });
+    });
+    // 点击消息：复制/撤回菜单
+    box.querySelectorAll('.bubble[data-copy]').forEach(function(bub){
+      bub.addEventListener('click',function(e){
+        e.stopPropagation();
+        var old=document.querySelector('.msg-menu');if(old)old.remove();
+        var row=bub.closest('.msg-row');
+        var mid=row.dataset.mid;
+        var msg=null,list=State.convs[convKey(State.me.username,State.peer)]||[];
+        for(var i=0;i<list.length;i++)if(list[i].id===mid)msg=list[i];
+        var menu=document.createElement('div');menu.className='msg-menu';
+        var c=document.createElement('button');c.textContent='📋 复制';
+        c.onclick=function(ev){ev.stopPropagation();Chat.copy(bub.dataset.copy);menu.remove()};
+        menu.appendChild(c);
+        if(msg&&msg.sender===State.me.username&&(Date.now()-msg.ts<120000)){
+          var r=document.createElement('button');r.textContent='↩️ 撤回';r.className='danger';
+          r.onclick=function(ev){ev.stopPropagation();Chat.recall(mid);menu.remove()};
+          menu.appendChild(r);
+        }
+        row.appendChild(menu);
+      });
+    });
+  }
+};
+
+/* ================= 手机侧边栏 ================= */
+var Sidebar={
+  open:function(){$('sidebar').classList.add('open');$('sidebar-overlay').classList.add('show')},
+  close:function(){$('sidebar').classList.remove('open');$('sidebar-overlay').classList.remove('show')}
+};
+
+/* ================= 启动 ================= */
+Auth.init();
+UI.init();
+</script>
+</body>
+</html>
